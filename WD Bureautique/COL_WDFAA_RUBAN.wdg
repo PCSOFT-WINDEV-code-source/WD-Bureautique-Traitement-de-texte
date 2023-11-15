@@ -1,0 +1,183 @@
+#To edit and compare internal_properties, use WINDEV integrated tools.
+#Internal properties refer to the properties of controls in windows, reports, etc.
+info :
+ name : COL_WDFAA_RUBAN
+ major_version : 28
+ minor_version : 0
+ type : 7
+ description : ""
+ subtype : 0
+procedure_set :
+ identifier : 0x1a1552ec002a6b88
+ internal_properties : CAAAAAgAAABGLu41kG7fjQV3iS4F72qmnKaNh5694reolNKIW0iw
+ code_elements :
+  type_code : 31
+  p_codes : []
+  procedures :
+   -
+     name : RubanDupliqueVolets
+     internal_properties : CAAAAAgAAADmZ9dBD9pwfaa25xDvxQvmaIV6tXoXmXA1fzr0WLWAj96n7RH3w5moKWoDAdjsPnn0P2GAygwnmjVVGvSh+FdaP8W9ArKgVeSN3ny/JZh9EtnmpQwPojWm5DYjdOWQXZSZBvQnbHlIc1QQwtk9
+     procedure_id : 1879499640310306261
+     type_code : 15
+     code : |1-
+      // Résumé : Duplique les volets d'un ruban dans un autre ruban
+      // Syntaxe :
+      //RubanDupliqueVolets (<oRubanSource> est champ, <oRubanDestination> est champ [, <tabIndicesVolets> est tableau])
+      //
+      // Paramètres :
+      //	oRubanSource (champ) : Ruban source contenant les volets à dupliquer
+      //	oRubanDestination (champ) : Ruban destination dans lequel les volets seront dupliqués
+      //	tabIndicesVolets (tableau) : Liste des indices de volets à dupliquer. Si ce paramètre n'est pas précisé, tous les volets de <oRubanSource> seront dupliqués
+      // Valeur de retour :
+      // 	Aucune
+      //
+      PROCEDURE RubanDupliqueVolets(oRubanSource est un champ, oRubanDestination est une champ, local tabIndicesVolets est un tableau d'entiers = [])
+      
+      	oRubanSource..Style = oRubanDestination..Style
+      	oRubanSource..Hauteur = oRubanDestination..Hauteur
+      	
+      	PROCÉDURE INTERNE ___VideVoletRuban(oVolet est un champ)
+      	
+      		// Supprime les regroupements du volet cloné
+      		nIndice est un entier = 1
+      		sNomChamp est une chaine = EnumèreChamp(oVolet..nomcomplet, nIndice)
+      		TANTQUE sNomChamp <> ""
+      			
+      			// Supprime le regroupement 
+      			ChampSupprime(oVolet..NomComplet + ["."] + sNomChamp)	
+      			
+      			CONTINUER:
+      			sNomChamp = EnumèreChamp(oVolet..NomComplet, nIndice)
+      		FIN
+      	FIN
+      
+      	PROCÉDURE INTERNE ___DupliqueVoletRuban(oVolet est un champ, oVoletDestination est une champ)
+      	
+      		// Enumère les champs et regroupement du volet [i]
+      		nIndice est un entier = 1
+      		sNomChamp est une chaine = EnumèreChamp(oVolet..nomcomplet, nIndice)
+      		TANTQUE sNomChamp <> ""
+      			
+      			// Clone le champ
+      			oClone est un champ <- ChampClone(oVolet..nomcomplet + "." + sNomChamp, oVoletDestination..NomComplet + "." + DonneGUID(guidBrut))
+      						
+      			nIndice ++			
+      			sNomChamp = EnumèreChamp(oVolet..NomComplet, nIndice)
+      		FIN			
+      	FIN
+      	
+      	// Clone les volets du ruban
+      	POUR i = 1 _a_ oRubanSource..Occurrence
+      		
+      		// Si on a fourni une liste d'indices de volet et que l'indice ne correspond pas, on passe au suivant
+      		si pas (tabIndicesVolets..Occurrence = 0 _ou_ tabIndicesVolets.cherche(tcLinéaire, i) > 0) alors
+      			continuer
+      		FIN
+      		
+      		// Clone un volet du ruban du champ tableur
+      		oClone est un champ <- ChampClone(oRubanDestination[1], "RUB_" + DonneGUID(guidBrut))
+      		
+      		// Vide les champs de ce volet cloné
+      		___VideVoletRuban(oClone)
+      		
+      		// Recopie les propriétés
+      		oClone..Bulle = oRubanSource[i]..Bulle
+      		oClone..Couleur = oRubanSource[i]..Couleur
+      		oClone..Etat = oRubanSource[i]..Etat
+      		oClone..Grisé = oRubanSource[i]..Grisé
+      		oClone..Image = oRubanSource[i]..Image
+      		oClone..Libellé = oRubanSource[i]..Libellé
+      		oClone..Visible = oRubanSource[i]..Visible
+      		
+      		// Recopie les regroupements et les champs de RUBAN_SansNom1	
+      		oVolet est un champ <- oRubanSource[i]
+      		___DupliqueVoletRuban(oVolet, oClone)
+      		
+      	FIN
+     type : 458752
+   -
+     name : RubanAjouteRegroupement
+     internal_properties : CAAAAAgAAAAuH4H5b9LUce7CT/gPicsuKPFWVUo32Ty1mxqUEAHQdzZDsTF3O/HkKXZrOZgw1umsewVgOiTNrDur+IIrSnVoLcuvmPwS+45LhIq15/qDCG+sJ4phdAPY2jThwv9SE+JHhD4Fpivimd4iCpH1
+     procedure_id : 1879521866767437144
+     type_code : 15
+     code : |1-
+      // Résumé : Ajoute un regroupement existant dans un volet d'un ruban
+      // Syntaxe :
+      //[ <Résultat> = ] RubanAjouteRegroupement (<oRuban> est champ, <nIndiceVolet> est entier, <oRegroupement> est champ)
+      //
+      // Paramètres :
+      //	oRuban (champ) : Ruban contenant le volet dans lequel le regroupement doit être ajouté
+      //	nIndiceVolet (entier) : Indice du volet
+      //	oRegroupement (champ) : Regroupement existant à ajouter dans le volet. Ce regroupement sera cloné
+      // Valeur de retour :
+      // 	champ : Regroupement ajouté. 
+      //
+      PROCEDURE RubanAjouteRegroupement(oRuban est un champ, nIndiceVolet est un entier, oRegroupement est un champ)
+      
+      	XMAX est un entier	
+      	nIndice est un entier = 1
+      	sNomChamp est une chaine
+      	
+      	// 1 - Détermine la position pour ajouter le regroupement
+      	
+      	// Enumère les champs du volet
+      	sNomChamp = EnumèreChamp(oRuban[nIndiceVolet]..NomComplet, nIndice)
+      	tantque sNomChamp <> ""
+      		
+      		// Prend une référence sur le champ
+      		oChamp est un champ <- {oRuban[nIndiceVolet]..NomComplet + "." + sNomChamp, indchamp}
+      		
+      		// Calcule la position max
+      		XMAX = max(XMAX, oChamp..X + oChamp..Largeur)
+      		
+      		nIndice ++
+      		sNomChamp = EnumèreChamp(oRuban[nIndiceVolet]..NomComplet, nIndice)
+      	FIN
+      	
+      	// 2 - Ajoute le regroupement
+      		
+      	// Clone le regroupement
+      	oClone est un champ <- ChampClone(oRegroupement, oRuban[nIndiceVolet]..NomComplet + "." + DonneGUID(guidBrut), XMAX, CoordonnéeEditeurVersEcran(3))
+      	
+      renvoyer oClone
+     type : 458752
+   -
+     name : DéclareRaccourci
+     procedure_id : 1880289450446522752
+     type_code : 15
+     code : |1-
+      // Résumé : Déclare un raccourci clavier et l'associe à une procédure
+      // Syntaxe :
+      //DéclareRaccourci (<nTouches> est entier, <pCallback> est procédure)
+      //
+      // Paramètres :
+      //	nTouches (entier) : Combinaison de touches (voir ..ToucheRaccourci)
+      //	pCallback (procédure) : Procédure à exécuter lors de l'activation du raccourci
+      // Valeur de retour :
+      // 	Aucune
+      //
+      PROCEDURE DéclareRaccourci(nTouches est un entier, pCallback est une procedure)
+      
+      	// Crée un bouton hors-écran
+      	oRaccourci est un champ <- champcree("BTN_RACCOURCI_" + donneguid(guidBrut), typBouton, -100, -100, 5, 5, vrai)
+      	
+      	// Place le bouton sur le plan général 0
+      	oRaccourci..plan = 0
+      	
+      	// Attribue le(s) touche(s) de raccourci
+      	oRaccourci..ToucheRaccourci = nTouches
+      	
+      	// Attribue la procédure au clic
+      	oRaccourci..Traitement[ trtclic ] = pCallback
+     type : 458752
+  procedure_templates : []
+  property_templates : []
+ code_parameters :
+  internal_properties : CAAAAAgAAACVGQgYbalU7DKC3oH4ItDrjtcTHXXV/EuH8q0IbhyQlw==
+  original_name : COL_SansNom1
+resources :
+ string_res :
+  identifier : 0x10d9977d0363cb53
+  internal_properties : CAAAAAgAAACm76HWfKGWp33VjXInA4cRlqArlgTTA862QGt72W2ld5Y=
+custom_note :
+ internal_properties : CAAAAAgAAABtB9HWVzrXO2+4NDRVK0vmzaNKrCKqH1DBX30lMmGZ

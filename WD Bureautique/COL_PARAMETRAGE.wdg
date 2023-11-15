@@ -1,0 +1,288 @@
+#To edit and compare internal_properties, use WINDEV integrated tools.
+#Internal properties refer to the properties of controls in windows, reports, etc.
+info :
+ name : COL_PARAMETRAGE
+ major_version : 28
+ minor_version : 0
+ type : 7
+ description : ""
+ subtype : 0
+procedure_set :
+ identifier : 0x1a1458080066d8a6
+ internal_properties : CAAAAAgAAABGLu41kG7fjQV3iS4F72qmnKaNh5694reolNKIW0iw
+ code_elements :
+  type_code : 31
+  p_codes :
+   -
+     internal_properties : CAAAAAgAAACVvFSmcV8QR0f0NbcITDh1BK6cik+d+ZHxAmRa5pl/CciFTZWsa0Gf6nEaa3WEaQTrn+nn3GUab+AZPUaPt/fkfdFF7RyLxctB+kYrpUPqYZtAUfulw0XsTYZT7UtTAtR5tYKA8rOv3sLFcWpP9nw0CzJOysydxraT8Gi9mQ8aGQ==
+     code : |1-
+      
+      MRUElement est une structure
+      	CheminComplet 	est une chaine		<serialise = "path">
+      	DateHeureAccès 	est une dateheure	<Sérialise = "access_time">
+      	PositionDoc		est un numérique	<sérialise = "pos">
+      fin
+      
+      EXTENSION_DOCUMENT est une chaine = ""
+      EXTENSION_DOCUMENT_SELECTEUR est une chaine = ""
+      DESCRIPTION_DOCUMENT est une chaine = ""
+      
+      MRU est un tableau de MRUElement = MRUCharge()
+      gnCompteurDocument est un entier = 1	// Compteur de nouveaux documents
+      gbLigneCommandeTraitée est un booléen = faux
+     type : 720896
+   -
+     code : |1-
+      
+      // Sauvegarde MRU
+      MRUSauve()
+     type : 720898
+  procedures :
+   -
+     name : AssocieExtensions
+     internal_properties : CAAAAAgAAACOKepM2nIicUgIV1HWhOue+caeehYxjRaKXGTBsVqqi/wZu9qZhNDpAloWDdaiFerIcDRltsKBQySwwb78qOyRg7RqgsSeExJqYv52gIm6oUKfhWE5wneUEH0YkrdQwuvnLs1fgAXJAjSHBabPL1K/KH4E5SM0P2RvJPNPNMRk2Vmr0yFSbdTBr9y+RhufmnKAGCPaNV4=
+     procedure_id : 1879223783154713455
+     type_code : 15
+     code : |1-
+      // Résumé : Associe la ou les extensions au programme
+      // Syntaxe :
+      //[ <Résultat> = ] AssocieExtensions ( [<bAssociation> est booléen])
+      //
+      // Paramètres :
+      //	bAssociation (booléen - valeur par défaut=1) : Vrai pour associer, Faux pour dissocier
+      // Valeur de retour :
+      // 	booléen : Vrai si l'association a été exécutée, Faux sinon
+      //
+      PROCEDURE AssocieExtensions(bAssociation est un booléen = vrai) : booléen
+      
+      	// Si on possède les privilèges administrateurs ou si l'UAC n'est pas actif
+      	si ExéPrivilègesElevés() _ou_ UACActif() = faux ALORS
+      		
+      		si bAssociation alors
+      			
+      			pour toute chaine sExtension de EXTENSION_DOCUMENT separee par ";"
+      				// Associe l'extension
+      				SysAssocieExtension(["."] + sExtension, ExeInfo(exeNom) + " ""%1""")
+      			fin
+      			
+      			renvoyer vrai
+      		sinon
+      			
+      			POUR TOUTE CHAÎNE sExtension de EXTENSION_DOCUMENT separee par ";"
+      				// Dissocie l'extension
+      				SysDissocieExtension(["."] + sExtension)
+      			fin
+      			
+      			renvoyer vrai
+      		FIN
+      	sinon
+      		
+      		// On relance l'application avec les privilèges adéquats uniquement pour exécuter l'action
+      		RENVOYER LanceAppliAvecElévation(ExeInfo(exeNom), "/shell" + (bAssociation ? "" sinon "un") + "assoc")
+      	FIN
+     type : 458752
+   -
+     name : DéclareExtensions
+     internal_properties : CAAAAAgAAABY8VSC4NqCUStsu+NwqXB6zWZCCjZC8mnxDXOnVCKvaRXJNzsf3Gx6IXmCCyR8T7ua2OTsxWP43Zy9uOj8wsMGQVNzLP9LEWiju8sBrebjxPPy01fDl4xiSO3vzIUe9p4tBfWbkLWBiTowrkpq0y4ACNk2P72ScdlnIdAJz1ogogVxfn94Khqf7qMWDagxqTq6xjWl2NaUjW3QR1UbSVx33P81OCXPbbcgmUpj0M8H8BuyMdetxMQiHe0r9CHVLw==
+     procedure_id : 1879910904920124926
+     type_code : 15
+     code : |1-
+      // Résumé : Déclare les extensions gérées par l'outil
+      // Syntaxe :
+      //DéclareExtensions (<sExtensions> est chaîne [, <sDescription> est chaîne])
+      //
+      // Paramètres :
+      //	sExtensions (chaîne ANSI) : Extensions de fichier gérées séparées par ";"
+      //	sDescription (chaîne ANSI - valeur par défaut="") : Description générale des extensions
+      // Valeur de retour :
+      // 	Aucune
+      //
+      PROCEDURE DéclareExtensions(local sExtensions est une chaine, local sDescription est une chaine = "")
+      
+      	// Conserve les extensions
+      	EXTENSION_DOCUMENT = minuscule(sExtensions)
+      	EXTENSION_DOCUMENT_SELECTEUR = ""
+      
+      	// Conserve la description du document
+      	si sDescription = "" alors sDescription = "Fichiers " + extraitchaine(majuscule(EXTENSION_DOCUMENT), 1, ";")
+      	DESCRIPTION_DOCUMENT = sDescription
+      	
+      	// Pour chaque extension déclarée
+      	pour toute chaine sExtensions de EXTENSION_DOCUMENT separee par ";"
+      		EXTENSION_DOCUMENT_SELECTEUR += [";"] + ("*" + (["."] + sExtensions))
+      	FIN
+      
+      	// Si on a reçu la ligne de commande /shellassoc
+      	SI LigneCommande() [=] "/shellassoc" ALORS
+      		
+      		gbLigneCommandeTraitée = vrai
+      		
+      		// Associe l'extension
+      		AssocieExtensions()
+      		
+      		// Fermeture immédiate du programme
+      		FinProgramme(Vrai)
+      	FIN
+      	
+      	// Si on a reçu la ligne de commande /shellunassoc
+      	SI LigneCommande() [=] "/shellunassoc" ALORS
+      		
+      		gbLigneCommandeTraitée = Vrai
+      		
+      		// Dissocie l'extension
+      		AssocieExtensions(Faux)
+      		
+      		// Fermeture immédiate du programme
+      		FinProgramme(Vrai)
+      	FIN
+     type : 458752
+   -
+     name : MRUCharge
+     internal_properties : CAAAAAgAAADkH4BW2cDC0Qb2K5U6avuO84DUDKI/iR5xDJylvWRmouDHARypFrQ1zOSG5ZbUIRo+DgYbniSxAz6aceZseoy99YbwpJAsm64kTK4dZbI5ItfEpHLWe0DfrcKdrYhVzeiUQ9RI/d6i3dGsesEozB1E4UdDFqxPM9wh1sUZFh3DsjqEtg67CmlUOJ0vLQBguTNVDinEX3Q=
+     procedure_id : 1889193643504381195
+     type_code : 15
+     code : |1-
+      // Résumé : Charge la liste des documents précédemment ouverts
+      // Syntaxe :
+      //[ <Résultat> = ] MRUCharge ()
+      //
+      // Paramètres :
+      //	Aucun
+      // Valeur de retour :
+      // 	tableau : Liste des documents
+      //
+      // Traitement automatique des exceptions :   exécuter le bloc de code CAS EXCEPTION:
+      //
+      
+      PROCEDURE MRUCharge() : tableau de MRUElement
+      
+      	tabMRU est un tableau de MRUElement
+      	sJSON est une chaine ansi
+      	sFichierMRU est une chaine = fRepDonnéesUtilisateur() + [fSep] + "mru.json"
+      	
+      	// Vérifie l'existence du fichier
+      	si fFichierExiste( sFichierMRU ) = faux ALORS
+      		RENVOYER tabMRU
+      	FIN
+      	
+      	// Charge les données
+      	sJSON = fChargeTexte( sFichierMRU )
+      	
+      	// Sauvegarde vide
+      	si sJSON = "" ALORS
+      		RENVOYER tabMRU
+      	FIN
+      
+      	// Désérialise le contenu
+      	deserialise(tabMRU, sJSON, psdJSON)
+      	
+      	// Supprime les entrées les plus anciennes
+      	TANTQUE tabMRU..Occurrence > 100
+      		tabMRU.Supprime( DernierElément )
+      	FIN
+      
+      	// Recopie la liste
+      	renvoyer tabMRU
+      	
+      CAS EXCEPTION:
+      	RENVOYER tabMRU
+     type : 458752
+   -
+     name : MRUSauve
+     internal_properties : CAAAAAgAAABq20W8q2ZANRrs7TSj9ScQYCdCn6IxPdz1KXSorI2IxeKN7VMztV08LWhdJZwU9rdY/QHiCnoskyJYVVkQa0pNMNamn/lnVgmW0Uf8NKtgdfrXzlXKzWJHFeVieVTLmGcyz5EUi9hhRiPmTlWx
+     procedure_id : 1889194472433131345
+     type_code : 15
+     code : |1-
+      // Résumé : Sauvegarde la liste des documents précédemment ouverts
+      // Syntaxe :
+      //MRUSauve ()
+      //
+      // Paramètres :
+      //	Aucun
+      // Valeur de retour :
+      // 	Aucune
+      //
+      PROCEDURE MRUSauve()
+      
+      	sJSON est une chaine ansi
+      
+      	// Sérialise les données
+      	serialise(mru, sJSON, psdJSON)
+      	
+      	// Sauvegarde locale
+      	fsauveTexte( fRepDonnéesUtilisateur() + [fsep] + "mru.json", sJSON)
+     type : 458752
+   -
+     name : MRUAjoute
+     procedure_id : 1889195078026937287
+     type_code : 15
+     code : |1-
+      // Résumé : Mémorise l'ouverture d'un document dans la liste des documents précédemment ouverts
+      // Syntaxe :
+      //MRUAjoute (<sChemin> est chaîne [, <xDocPos> est numérique])
+      //
+      // Paramètres :
+      //	sChemin (chaîne UNICODE) : Chemin du document
+      // 	xDocPos (numérique - valeur par défaut=-1) : Position dans le document à conserver (-1 pour ne pas changer cette valeur)
+      // Valeur de retour :
+      // 	Aucune
+      //
+      PROCEDURE MRUAjoute(local sChemin est une chaine, local xDocPos est un numérique = -1)
+      
+      	nIndice est un entier
+      	stElement est un MRUElement
+      	
+      	// Le chemin doit être valide
+      	si ffichierexiste( sChemin ) = faux alors retour
+      	
+      	// Crée une entrée
+      	stElement.CheminComplet = sChemin
+      	stElement.DateHeureAccès = DateHeureLocaleVersUTC( dateheuresys )
+      	
+      	// Position à conserver
+      	SI xDocPos <> -1 ALORS
+      		stElement.PositionDoc = xDocPos
+      	fin
+      		
+      	// Vérifie si ce document est déjà dans la liste
+      	nIndice = MRU.cherche(tcLinéaire + tccSansCasse, "CheminComplet", sChemin)
+      	
+      	si nIndice > 0 ALORS
+      	
+      		// Pas de modification de la position
+      		si xDocPos = -1 ALORS
+      			
+      			// On doit reprendre la position précédemment conservée
+      			stElement.PositionDoc = MRU[ nIndice ].PositionDoc
+      		FIN
+      	
+      		// Mise à jour
+      		MRU[ nIndice ] = stElement
+      	sinon
+      		
+      		// Ajout
+      		mru.Ajoute( stElement )		
+      	FIN
+      
+      	// Tri de la MRU selon la date d'accès décroissante
+      	MRU.Trie(ttMembre, "-DateHeureAccès")
+      			
+      	// Supprime les entrées les plus anciennes
+      	tantque mru..Occurrence > 100
+      		MRU.Supprime( DernierElément )
+      	FIN
+      		
+      	// Sauve
+      	MRUSauve()
+     type : 458752
+  procedure_templates : []
+  property_templates : []
+ code_parameters :
+  internal_properties : CAAAAAgAAACVGQgYbalU7DKC3oH4ItDrjtcTHXXV/EuH8q0IbhyQlw==
+  original_name : COL_SansNom1
+resources :
+ string_res :
+  identifier : 0x10d9977d0372cb92
+  internal_properties : CAAAAAgAAACm76HWfKGWp33VjXInA4cRlqArlgTTA862QGt72W2ld5Y=
+custom_note :
+ internal_properties : CAAAAAgAAABtB9HWVzrXO2+4NDRVK0vmzaNKrCKqH1DBX30lMmGZ
